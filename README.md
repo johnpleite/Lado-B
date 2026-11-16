@@ -26,8 +26,7 @@ Este repositório é dedicado à disciplina de **Desenvolvimento de Sistemas de 
 
 **Docentes Orientadores:** Prof. Dr. Gabriel Alves de Albuquerque Júnior; Profa. Dra. Maria da Conceição Moraes Batista.
 
-**Discentes:** João Pedro Leite, Larissa de Souza Galindo, Luiz Filipe Feitosa.
-
+**Discente:** João Pedro Leite Aires.
 ---
 
 # Uso de inteligência artificial :
