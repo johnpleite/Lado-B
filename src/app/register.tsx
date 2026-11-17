@@ -90,9 +90,7 @@ export default function Register() {
             <Text style={styles.backText}>‹</Text>
             <Text style={styles.backLabel}>Voltar</Text>
           </Pressable>
-          <Text style={styles.kicker}>NOVA CONTA</Text>
-          <Text style={styles.title}>Vamos começar.</Text>
-          <Text style={styles.subtitle}>Preencha seus dados para criar sua conta.</Text>
+          <Text style={styles.title}>Criar conta</Text>
           <View style={styles.form}>
             <UsernameField placeholder="Nome de usuário" value={username} onChangeText={setUsername} />
             <Field label="E-mail" placeholder="exemplo@email.com" keyboardType="email-address" value={email} onChangeText={setEmail} />
@@ -100,7 +98,7 @@ export default function Register() {
             <PasswordStrength password={password} />
             <Field label="Confirmar senha" placeholder="Digite sua senha novamente" secureTextEntry value={confirmPassword} onChangeText={setConfirmPassword} />
           </View>
-          <Pressable disabled={isSubmitting} onPress={handleRegister} style={({ pressed }) => [styles.button, pressed && styles.pressed]}>
+          <Pressable accessibilityRole="button" disabled={isSubmitting} onPress={handleRegister} style={({ pressed }) => [styles.button, pressed && styles.pressed]}>
             {isSubmitting ? <ActivityIndicator color={colors.background} /> : <Text style={styles.buttonText}>Criar minha conta</Text>}
           </Pressable>
           {!!error && <Text style={styles.error}>{error}</Text>}
@@ -220,10 +218,8 @@ function createStyles(colors: ColorPalette) {
   backButton: { alignItems: "center", flexDirection: "row", marginBottom: 56 },
   backText: { color: colors.textPrimary, fontSize: 34, lineHeight: 26, marginRight: 8 },
   backLabel: { color: colors.textSecondary, fontSize: 14, fontWeight: "700" },
-  kicker: { color: colors.accent, fontSize: 12, fontWeight: "800", letterSpacing: 2, marginBottom: 12 },
   title: { color: colors.textPrimary, fontSize: 38, fontWeight: "800", lineHeight: 44 },
-  subtitle: { color: colors.textMuted, fontSize: 16, lineHeight: 24, marginTop: 12 },
-  form: { gap: 20, marginTop: 42 },
+  form: { gap: 20, marginTop: 32 },
   field: { gap: 8 },
   strengthContainer: { gap: 7, marginTop: -10 },
   strengthTrack: { backgroundColor: colors.borderMuted, borderRadius: 3, height: 6, overflow: "hidden", width: "100%" },

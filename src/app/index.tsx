@@ -32,11 +32,7 @@ export default function Index() {
       <StatusBar style={mode === "dark" ? "light" : "dark"} />
       <View style={styles.hero}>
         <Image source={require("../../assets/images/icon.png")} style={styles.logo} />
-        <Text style={styles.eyebrow}>LADO B</Text>
-        <Text style={styles.title}>Sua próxima faixa favorita está aqui.</Text>
-        <Text style={styles.subtitle}>
-          Monte álbuns, crie playlists e descubra recomendações do seu jeito.
-        </Text>
+        <Text style={styles.brand}>LADO B</Text>
       </View>
       <View style={styles.actions}>
         <Pressable
@@ -69,27 +65,11 @@ function createStyles(colors: ColorPalette) {
   },
   hero: { alignItems: "center", paddingTop: 54 },
   logo: { borderRadius: 24, height: 108, marginBottom: 36, width: 108 },
-  eyebrow: {
+  brand: {
     color: colors.accent,
-    fontSize: 12,
+    fontSize: 16,
     fontWeight: "800",
     letterSpacing: 2,
-    marginBottom: 14,
-  },
-  title: {
-    color: colors.textPrimary,
-    fontSize: 36,
-    fontWeight: "800",
-    lineHeight: 46,
-    textAlign: "center",
-  },
-  subtitle: {
-    color: colors.welcomeMuted,
-    fontSize: 16,
-    lineHeight: 24,
-    marginTop: 18,
-    maxWidth: 300,
-    textAlign: "center",
   },
   actions: { gap: 14, width: "100%" },
   primaryButton: {

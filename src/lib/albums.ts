@@ -1,9 +1,13 @@
 import {
+  arrayRemove,
   arrayUnion,
   collection,
+  deleteDoc,
   doc,
   runTransaction,
   serverTimestamp,
+  setDoc,
+  updateDoc,
 } from "firebase/firestore";
 import { db } from "./firebase";
 
@@ -131,4 +135,54 @@ export async function createPlaylistWithAlbum(
   });
 
   return playlistRef.id;
+}
+
+export async function createPlaylist(userId: string, name: string) {
+  const normalizedName = name.trim();
+  if (!normalizedName) {
+    throw new Error("O nome da playlist não pode ficar vazio.");
+  }
+
+  const playlistRef = doc(collection(db, "usuarios", userId, "playlists"));
+  await setDoc(playlistRef, {
+    name: normalizedName,
+    albumIds: [],
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+
+  return playlistRef.id;
+}
+
+export async function updatePlaylist(
+  userId: string,
+  playlistId: string,
+  name: string,
+  description: string,
+) {
+  const normalizedName = name.trim();
+  if (!normalizedName) {
+    throw new Error("O nome da playlist não pode ficar vazio.");
+  }
+
+  await updateDoc(doc(db, "usuarios", userId, "playlists", playlistId), {
+    name: normalizedName,
+    description: description.trim(),
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function deletePlaylist(userId: string, playlistId: string) {
+  await deleteDoc(doc(db, "usuarios", userId, "playlists", playlistId));
+}
+
+export async function removeAlbumFromPlaylist(
+  userId: string,
+  playlistId: string,
+  albumId: string,
+) {
+  await updateDoc(doc(db, "usuarios", userId, "playlists", playlistId), {
+    albumIds: arrayRemove(albumId),
+    updatedAt: serverTimestamp(),
+  });
 }

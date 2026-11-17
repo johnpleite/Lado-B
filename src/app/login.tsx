@@ -50,9 +50,7 @@ export default function Login() {
             <Text style={styles.backText}>‹</Text>
             <Text style={styles.backLabel}>Voltar</Text>
           </Pressable>
-          <Text style={styles.kicker}>BEM-VINDO DE VOLTA</Text>
-          <Text style={styles.title}>Que bom ver você.</Text>
-          <Text style={styles.subtitle}>Entre com seu e-mail para continuar.</Text>
+          <Text style={styles.title}>Entrar</Text>
           <View style={styles.form}>
             <View style={styles.field}>
               <Text style={styles.label}>E-mail</Text>
@@ -63,11 +61,11 @@ export default function Login() {
               <TextInput placeholder="Digite sua senha" placeholderTextColor={colors.placeholder} secureTextEntry style={styles.input} value={password} onChangeText={setPassword} />
             </View>
           </View>
-          <Pressable disabled={isSubmitting} onPress={handleLogin} style={({ pressed }) => [styles.button, pressed && styles.pressed]}>
+          <Pressable accessibilityRole="button" disabled={isSubmitting} onPress={handleLogin} style={({ pressed }) => [styles.button, pressed && styles.pressed]}>
             {isSubmitting ? <ActivityIndicator color={colors.background} /> : <Text style={styles.buttonText}>Entrar</Text>}
           </Pressable>
           {!!error && <Text style={styles.error}>{error}</Text>}
-          <Pressable onPress={() => router.push("/register")} style={styles.registerLink}>
+          <Pressable accessibilityRole="button" onPress={() => router.push("/register")} style={styles.registerLink}>
             <Text style={styles.registerText}>Ainda não tem uma conta? <Text style={styles.registerStrong}>Cadastre-se</Text></Text>
           </Pressable>
         </ScrollView>
@@ -97,10 +95,8 @@ function createStyles(colors: ColorPalette) {
   backButton: { alignItems: "center", flexDirection: "row", marginBottom: 56 },
   backText: { color: colors.textPrimary, fontSize: 34, lineHeight: 26, marginRight: 8 },
   backLabel: { color: colors.textSecondary, fontSize: 14, fontWeight: "700" },
-  kicker: { color: colors.accent, fontSize: 12, fontWeight: "800", letterSpacing: 2, marginBottom: 12 },
   title: { color: colors.textPrimary, fontSize: 38, fontWeight: "800", lineHeight: 44 },
-  subtitle: { color: colors.textMuted, fontSize: 16, lineHeight: 24, marginTop: 12 },
-  form: { gap: 20, marginTop: 42 },
+  form: { gap: 20, marginTop: 32 },
   field: { gap: 8 },
   label: { color: colors.textLabel, fontSize: 13, fontWeight: "800" },
   input: { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: 12, borderWidth: 1, color: colors.textPrimary, fontSize: 16, minHeight: 56, paddingHorizontal: 16 },

@@ -30,20 +30,34 @@ export default function Settings() {
   async function loadProfile(uid: string) {
     const snapshot = await getDoc(doc(db, "usuarios", uid));
     const data = snapshot.data();
-    setProfile({
+    return {
       username: typeof data?.username === "string" ? data.username : "",
       email: typeof data?.email === "string" ? data.email : auth.currentUser?.email ?? "",
-    });
+    };
   }
 
-  useEffect(() => onAuthStateChanged(auth, (nextUser) => {
-    if (!nextUser) {
-      router.replace("/");
-      return;
-    }
-    setUser(nextUser);
-    void loadProfile(nextUser.uid);
-  }), [router]);
+  useEffect(() => {
+    let isActive = true;
+    const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
+      if (!nextUser) {
+        router.replace("/");
+        return;
+      }
+      setUser(nextUser);
+      setError("");
+      void loadProfile(nextUser.uid).then((nextProfile) => {
+        if (isActive) setProfile(nextProfile);
+      }).catch((profileLoadError: unknown) => {
+        console.error("Failed to load settings profile.", profileLoadError);
+        if (isActive) setError("Não foi possível carregar os dados da sua conta.");
+      });
+    });
+
+    return () => {
+      isActive = false;
+      unsubscribe();
+    };
+  }, [router]);
 
   function selectAction(nextAction: Action) {
     setAction(nextAction);
@@ -157,7 +171,7 @@ export default function Settings() {
       <StatusBar style={mode === "dark" ? "light" : "dark"} />
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.keyboardView}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <Pressable onPress={goBack} style={styles.backButton}>
+          <Pressable accessibilityRole="button" onPress={goBack} style={styles.backButton}>
             <Text style={styles.backText}>‹</Text>
             <Text style={styles.backLabel}>{step === "options" ? "Voltar para o Lado B" : "Voltar"}</Text>
           </Pressable>
@@ -219,14 +233,14 @@ function Option({ label, value, onPress, destructive = false }: { label: string;
   const { colors } = useTheme();
   const styles = createStyles(colors);
 
-  return <Pressable onPress={onPress} style={({ pressed }) => [styles.option, destructive && styles.deleteOption, pressed && styles.pressed]}><View><Text style={[styles.optionLabel, destructive && styles.deleteText]}>{label}</Text><Text style={[styles.optionValue, destructive && styles.deleteText]}>{value}</Text></View><Text style={[styles.optionArrow, destructive && styles.deleteText]}>›</Text></Pressable>;
+  return <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => [styles.option, destructive && styles.deleteOption, pressed && styles.pressed]}><View><Text style={[styles.optionLabel, destructive && styles.deleteText]}>{label}</Text><Text style={[styles.optionValue, destructive && styles.deleteText]}>{value}</Text></View><Text style={[styles.optionArrow, destructive && styles.deleteText]}>›</Text></Pressable>;
 }
 
 function ActionButton({ label, busy, onPress, destructive = false }: { label: string; busy: boolean; onPress: () => void; destructive?: boolean }) {
   const { colors } = useTheme();
   const styles = createStyles(colors);
 
-  return <Pressable disabled={busy} onPress={onPress} style={({ pressed }) => [styles.button, destructive && styles.deleteButton, pressed && styles.pressed]}>{busy ? <ActivityIndicator color={colors.primaryText} /> : <Text style={styles.buttonText}>{label}</Text>}</Pressable>;
+  return <Pressable accessibilityRole="button" disabled={busy} onPress={onPress} style={({ pressed }) => [styles.button, destructive && styles.deleteButton, pressed && styles.pressed]}>{busy ? <ActivityIndicator color={colors.primaryText} /> : <Text style={styles.buttonText}>{label}</Text>}</Pressable>;
 }
 
 function Field({ label, ...props }: React.ComponentProps<typeof TextInput> & { label: string }) {

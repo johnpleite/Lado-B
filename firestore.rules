@@ -29,14 +29,20 @@ service cloud.firestore {
           'datasetScore',
           'datasetRatingCount',
           'sourceUrl',
+          'coverArtUrl',
           'createdAt'
         ])
         && request.resource.data.title is string
         && request.resource.data.artist is string
         && request.resource.data.genres is list
         && request.resource.data.datasetScore is number
-        && request.resource.data.datasetRatingCount is number;
-      allow update, delete: if false;
+        && request.resource.data.datasetRatingCount is number
+        && (!('coverArtUrl' in request.resource.data)
+          || isValidCoverArtUrl(request.resource.data.coverArtUrl));
+      allow update: if isSignedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['coverArtUrl'])
+        && isValidCoverArtUrl(request.resource.data.coverArtUrl);
+      allow delete: if false;
 
       match /avaliacoes/{userId} {
         allow read: if ownsUserData(userId);
@@ -49,6 +55,11 @@ service cloud.firestore {
           && request.resource.data.comment is string
           && request.resource.data.genres is list;
         allow delete: if ownsUserData(userId);
+      }
+
+      function isValidCoverArtUrl(url) {
+        return url is string
+          && url.matches('https://(coverartarchive\\.org|archive\\.org)/.*');
       }
     }
   }
