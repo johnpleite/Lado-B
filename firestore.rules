@@ -1,0 +1,55 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function ownsUserData(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    match /usuarios/{userId} {
+      allow read, create, update, delete: if ownsUserData(userId);
+
+      match /{userCollection}/{document=**} {
+        allow read, write: if ownsUserData(userId);
+      }
+    }
+
+    match /albuns/{albumId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn()
+        && request.resource.data.keys().hasOnly([
+          'title',
+          'artist',
+          'releaseDate',
+          'genres',
+          'datasetScore',
+          'datasetRatingCount',
+          'sourceUrl',
+          'createdAt'
+        ])
+        && request.resource.data.title is string
+        && request.resource.data.artist is string
+        && request.resource.data.genres is list
+        && request.resource.data.datasetScore is number
+        && request.resource.data.datasetRatingCount is number;
+      allow update, delete: if false;
+
+      match /avaliacoes/{userId} {
+        allow read: if ownsUserData(userId);
+        allow create, update: if ownsUserData(userId)
+          && request.resource.data.userId == userId
+          && request.resource.data.albumId == albumId
+          && request.resource.data.rating is int
+          && request.resource.data.rating >= 1
+          && request.resource.data.rating <= 5
+          && request.resource.data.comment is string
+          && request.resource.data.genres is list;
+        allow delete: if ownsUserData(userId);
+      }
+    }
+  }
+}

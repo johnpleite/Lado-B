@@ -6,6 +6,8 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { auth, db } from "../lib/firebase";
+import { ColorPalette } from "../theme/colors";
+import { ThemeMode, useTheme } from "../theme/theme";
 
 type Action = "username" | "email" | "password" | "delete";
 type Profile = { username: string; email: string };
@@ -22,6 +24,8 @@ export default function Settings() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const { colors, mode, setMode } = useTheme();
+  const styles = createStyles(colors);
 
   async function loadProfile(uid: string) {
     const snapshot = await getDoc(doc(db, "usuarios", uid));
@@ -150,7 +154,7 @@ export default function Settings() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar style="dark" />
+      <StatusBar style={mode === "dark" ? "light" : "dark"} />
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.keyboardView}>
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <Pressable onPress={goBack} style={styles.backButton}>
@@ -161,12 +165,22 @@ export default function Settings() {
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.subtitle}>{subtitle}</Text>
 
-          {step === "options" && <View style={styles.options}>
-            <Option label="Alterar username" value={`@${profile.username}`} onPress={() => selectAction("username")} />
-            <Option label="Alterar e-mail" value={profile.email} onPress={() => selectAction("email")} />
-            <Option label="Alterar senha" value="Senha protegida" onPress={() => selectAction("password")} />
-            <Option label="Deletar conta" value="Ação permanente" destructive onPress={() => selectAction("delete")} />
-          </View>}
+          {step === "options" && <>
+            <View style={styles.appearance}>
+              <Text style={styles.appearanceTitle}>Aparência</Text>
+              <Text style={styles.appearanceDescription}>Escolha o tema do aplicativo.</Text>
+              <View style={styles.themeOptions}>
+                <ThemeButton label="Claro" value="light" selectedMode={mode} onSelect={setMode} />
+                <ThemeButton label="Escuro" value="dark" selectedMode={mode} onSelect={setMode} />
+              </View>
+            </View>
+            <View style={styles.options}>
+              <Option label="Alterar username" value={`@${profile.username}`} onPress={() => selectAction("username")} />
+              <Option label="Alterar e-mail" value={profile.email} onPress={() => selectAction("email")} />
+              <Option label="Alterar senha" value="Senha protegida" onPress={() => selectAction("password")} />
+              <Option label="Deletar conta" value="Ação permanente" destructive onPress={() => selectAction("delete")} />
+            </View>
+          </>}
 
           {step === "confirm" && <View style={styles.form}>
             <Field label="Senha atual" placeholder="Digite sua senha atual" secureTextEntry value={currentPassword} onChangeText={setCurrentPassword} />
@@ -202,15 +216,45 @@ export default function Settings() {
 }
 
 function Option({ label, value, onPress, destructive = false }: { label: string; value: string; onPress: () => void; destructive?: boolean }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+
   return <Pressable onPress={onPress} style={({ pressed }) => [styles.option, destructive && styles.deleteOption, pressed && styles.pressed]}><View><Text style={[styles.optionLabel, destructive && styles.deleteText]}>{label}</Text><Text style={[styles.optionValue, destructive && styles.deleteText]}>{value}</Text></View><Text style={[styles.optionArrow, destructive && styles.deleteText]}>›</Text></Pressable>;
 }
 
 function ActionButton({ label, busy, onPress, destructive = false }: { label: string; busy: boolean; onPress: () => void; destructive?: boolean }) {
-  return <Pressable disabled={busy} onPress={onPress} style={({ pressed }) => [styles.button, destructive && styles.deleteButton, pressed && styles.pressed]}>{busy ? <ActivityIndicator color="#F2F4FF" /> : <Text style={styles.buttonText}>{label}</Text>}</Pressable>;
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+
+  return <Pressable disabled={busy} onPress={onPress} style={({ pressed }) => [styles.button, destructive && styles.deleteButton, pressed && styles.pressed]}>{busy ? <ActivityIndicator color={colors.primaryText} /> : <Text style={styles.buttonText}>{label}</Text>}</Pressable>;
 }
 
 function Field({ label, ...props }: React.ComponentProps<typeof TextInput> & { label: string }) {
-  return <View style={styles.field}><Text style={styles.label}>{label}</Text><TextInput placeholderTextColor="#829397" style={styles.input} {...props} /></View>;
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+
+  return <View style={styles.field}><Text style={styles.label}>{label}</Text><TextInput placeholderTextColor={colors.placeholder} style={styles.input} {...props} /></View>;
+}
+
+function ThemeButton({ label, value, selectedMode, onSelect }: { label: string; value: ThemeMode; selectedMode: ThemeMode; onSelect: (mode: ThemeMode) => void }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+  const selected = value === selectedMode;
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityState={{ selected }}
+      onPress={() => onSelect(value)}
+      style={({ pressed }) => [
+        styles.themeButton,
+        selected && styles.themeButtonSelected,
+        pressed && styles.pressed,
+      ]}
+    >
+      <Text style={[styles.themeButtonText, selected && styles.themeButtonTextSelected]}>{label}</Text>
+    </Pressable>
+  );
 }
 
 function getErrorMessage(error: unknown) {
@@ -226,32 +270,82 @@ function getErrorMessage(error: unknown) {
   return "Não foi possível atualizar esta informação.";
 }
 
-const styles = StyleSheet.create({
-  safeArea: { backgroundColor: "#F2F4FF", flex: 1 },
+function createStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+  safeArea: { backgroundColor: colors.background, flex: 1 },
   keyboardView: { flex: 1 },
   content: { padding: 28, paddingBottom: 48 },
   backButton: { alignItems: "center", flexDirection: "row", marginBottom: 48 },
-  backText: { color: "#182452", fontSize: 34, lineHeight: 26, marginRight: 8 },
-  backLabel: { color: "#53618F", fontSize: 14, fontWeight: "700" },
-  kicker: { color: "#6657C8", fontSize: 12, fontWeight: "800", letterSpacing: 2, marginBottom: 12 },
-  title: { color: "#182452", fontSize: 34, fontWeight: "800", lineHeight: 42 },
-  subtitle: { color: "#64709A", fontSize: 16, lineHeight: 24, marginTop: 12 },
-  options: { gap: 12, marginTop: 38 },
-  option: { alignItems: "center", backgroundColor: "#FFFFFF", borderColor: "#CDD5F0", borderRadius: 14, borderWidth: 1, flexDirection: "row", justifyContent: "space-between", padding: 18 },
-  optionLabel: { color: "#263568", fontSize: 16, fontWeight: "800" },
-  optionValue: { color: "#7D88AD", fontSize: 13, marginTop: 5 },
-  optionArrow: { color: "#6657C8", fontSize: 28 },
-  deleteOption: { borderColor: "#E8B6C2" },
-  deleteText: { color: "#B4234D" },
+  backText: { color: colors.textPrimary, fontSize: 34, lineHeight: 26, marginRight: 8 },
+  backLabel: { color: colors.textSecondary, fontSize: 14, fontWeight: "700" },
+  kicker: { color: colors.accent, fontSize: 12, fontWeight: "800", letterSpacing: 2, marginBottom: 12 },
+  title: { color: colors.textPrimary, fontSize: 34, fontWeight: "800", lineHeight: 42 },
+  subtitle: { color: colors.textMuted, fontSize: 16, lineHeight: 24, marginTop: 12 },
+  appearance: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: 14,
+    borderWidth: 1,
+    marginTop: 32,
+    padding: 18,
+  },
+  appearanceTitle: { color: colors.textLabel, fontSize: 16, fontWeight: "800" },
+  appearanceDescription: { color: colors.textMuted, fontSize: 13, marginTop: 5 },
+  themeOptions: { flexDirection: "row", gap: 10, marginTop: 16 },
+  themeButton: {
+    alignItems: "center",
+    borderColor: colors.border,
+    borderRadius: 10,
+    borderWidth: 1,
+    flex: 1,
+    justifyContent: "center",
+    minHeight: 44,
+  },
+  themeButtonSelected: { backgroundColor: colors.primary, borderColor: colors.primary },
+  themeButtonText: { color: colors.textPrimary, fontSize: 14, fontWeight: "700" },
+  themeButtonTextSelected: { color: colors.primaryText },
+  options: { gap: 12, marginTop: 16 },
+  option: {
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: 14,
+    borderWidth: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    padding: 18,
+  },
+  optionLabel: { color: colors.textLabel, fontSize: 16, fontWeight: "800" },
+  optionValue: { color: colors.textSubtle, fontSize: 13, marginTop: 5 },
+  optionArrow: { color: colors.accent, fontSize: 28 },
+  deleteOption: { borderColor: colors.dangerBorder },
+  deleteText: { color: colors.danger },
   form: { gap: 18, marginTop: 38 },
   field: { gap: 8 },
-  label: { color: "#263568", fontSize: 13, fontWeight: "800" },
-  input: { backgroundColor: "#FFFFFF", borderColor: "#CDD5F0", borderRadius: 12, borderWidth: 1, color: "#182452", fontSize: 16, minHeight: 56, paddingHorizontal: 16 },
-  button: { alignItems: "center", backgroundColor: "#263B91", borderRadius: 14, justifyContent: "center", marginTop: 14, minHeight: 58 },
-  buttonText: { color: "#F2F4FF", fontSize: 16, fontWeight: "800" },
-  deleteButton: { backgroundColor: "#B4234D" },
+  label: { color: colors.textLabel, fontSize: 13, fontWeight: "800" },
+  input: {
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderRadius: 12,
+    borderWidth: 1,
+    color: colors.textPrimary,
+    fontSize: 16,
+    minHeight: 56,
+    paddingHorizontal: 16,
+  },
+  button: {
+    alignItems: "center",
+    backgroundColor: colors.primary,
+    borderRadius: 14,
+    justifyContent: "center",
+    marginTop: 14,
+    minHeight: 58,
+  },
+  buttonText: { color: colors.background, fontSize: 16, fontWeight: "800" },
+  deleteButton: { backgroundColor: colors.danger },
   pressed: { opacity: 0.75 },
-  error: { color: "#B4234D", fontSize: 13, lineHeight: 19, marginTop: 16, textAlign: "center" },
-  message: { color: "#23836B", fontSize: 13, lineHeight: 19, marginTop: 16, textAlign: "center" },
-  deleteWarning: { color: "#B4234D", fontSize: 15, lineHeight: 23, textAlign: "center" },
-});
+  error: { color: colors.danger, fontSize: 13, lineHeight: 19, marginTop: 16, textAlign: "center" },
+  message: { color: colors.success, fontSize: 13, lineHeight: 19, marginTop: 16, textAlign: "center" },
+  deleteWarning: { color: colors.danger, fontSize: 15, lineHeight: 23, textAlign: "center" },
+  });
+}

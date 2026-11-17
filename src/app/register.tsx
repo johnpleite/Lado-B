@@ -17,6 +17,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { auth, db } from "../lib/firebase";
+import { ColorPalette } from "../theme/colors";
+import { useTheme } from "../theme/theme";
 
 export default function Register() {
   const router = useRouter();
@@ -26,6 +28,8 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { colors, mode } = useTheme();
+  const styles = createStyles(colors);
 
   async function handleRegister() {
     const normalizedUsername = username.trim().toLowerCase();
@@ -76,7 +80,7 @@ export default function Register() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar style="dark" />
+      <StatusBar style={mode === "dark" ? "light" : "dark"} />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.keyboardView}
@@ -97,7 +101,7 @@ export default function Register() {
             <Field label="Confirmar senha" placeholder="Digite sua senha novamente" secureTextEntry value={confirmPassword} onChangeText={setConfirmPassword} />
           </View>
           <Pressable disabled={isSubmitting} onPress={handleRegister} style={({ pressed }) => [styles.button, pressed && styles.pressed]}>
-            {isSubmitting ? <ActivityIndicator color="#F2F4FF" /> : <Text style={styles.buttonText}>Criar minha conta</Text>}
+            {isSubmitting ? <ActivityIndicator color={colors.background} /> : <Text style={styles.buttonText}>Criar minha conta</Text>}
           </Pressable>
           {!!error && <Text style={styles.error}>{error}</Text>}
         </ScrollView>
@@ -124,6 +128,9 @@ function getAuthErrorMessage(error: unknown) {
 type FieldProps = React.ComponentProps<typeof TextInput> & { label: string };
 
 function UsernameField(props: React.ComponentProps<typeof TextInput>) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+
   return (
     <View style={styles.field}>
       <Text style={styles.label}>Username</Text>
@@ -133,7 +140,7 @@ function UsernameField(props: React.ComponentProps<typeof TextInput>) {
           autoCapitalize="none"
           autoCorrect={false}
           placeholder="ladob"
-          placeholderTextColor="#829397"
+          placeholderTextColor={colors.placeholder}
           style={styles.usernameTextInput}
           {...props}
         />
@@ -143,10 +150,12 @@ function UsernameField(props: React.ComponentProps<typeof TextInput>) {
 }
 
 function PasswordStrength({ password }: { password: string }) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
   const score = getPasswordScore(password);
   const [progress] = useState(() => new Animated.Value(0));
   const labels = ["", "Fraca", "Razoável", "Boa", "Forte"];
-  const colors = ["#CDD5F0", "#B4234D", "#C27A2C", "#4E70C8", "#23836B"];
+  const strengthColors = [colors.border, colors.danger, colors.warning, colors.info, colors.success];
 
   useEffect(() => {
     Animated.timing(progress, {
@@ -163,13 +172,13 @@ function PasswordStrength({ password }: { password: string }) {
           style={[
             styles.strengthFill,
             {
-              backgroundColor: colors[score],
+              backgroundColor: strengthColors[score],
               width: progress.interpolate({ inputRange: [0, 1], outputRange: ["0%", "100%"] }),
             },
           ]}
         />
       </View>
-      <Text style={[styles.strengthText, { color: colors[score] }]}>{password ? labels[score] : ""}</Text>
+      <Text style={[styles.strengthText, { color: strengthColors[score] }]}>{password ? labels[score] : ""}</Text>
     </View>
   );
 }
@@ -186,12 +195,15 @@ function getPasswordScore(password: string) {
 }
 
 function Field({ label, ...props }: FieldProps) {
+  const { colors } = useTheme();
+  const styles = createStyles(colors);
+
   return (
     <View style={styles.field}>
       <Text style={styles.label}>{label}</Text>
       <TextInput
         autoCapitalize={label === "E-mail" ? "none" : "sentences"}
-        placeholderTextColor="#829397"
+        placeholderTextColor={colors.placeholder}
         style={styles.input}
         {...props}
       />
@@ -199,48 +211,50 @@ function Field({ label, ...props }: FieldProps) {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: { backgroundColor: "#F2F4FF", flex: 1 },
+function createStyles(colors: ColorPalette) {
+  return StyleSheet.create({
+  safeArea: { backgroundColor: colors.background, flex: 1 },
   keyboardView: { flex: 1 },
   scrollView: { flex: 1 },
   content: { padding: 28, paddingBottom: 96 },
   backButton: { alignItems: "center", flexDirection: "row", marginBottom: 56 },
-  backText: { color: "#182452", fontSize: 34, lineHeight: 26, marginRight: 8 },
-  backLabel: { color: "#53618F", fontSize: 14, fontWeight: "700" },
-  kicker: { color: "#6657C8", fontSize: 12, fontWeight: "800", letterSpacing: 2, marginBottom: 12 },
-  title: { color: "#182452", fontSize: 38, fontWeight: "800", lineHeight: 44 },
-  subtitle: { color: "#64709A", fontSize: 16, lineHeight: 24, marginTop: 12 },
+  backText: { color: colors.textPrimary, fontSize: 34, lineHeight: 26, marginRight: 8 },
+  backLabel: { color: colors.textSecondary, fontSize: 14, fontWeight: "700" },
+  kicker: { color: colors.accent, fontSize: 12, fontWeight: "800", letterSpacing: 2, marginBottom: 12 },
+  title: { color: colors.textPrimary, fontSize: 38, fontWeight: "800", lineHeight: 44 },
+  subtitle: { color: colors.textMuted, fontSize: 16, lineHeight: 24, marginTop: 12 },
   form: { gap: 20, marginTop: 42 },
   field: { gap: 8 },
   strengthContainer: { gap: 7, marginTop: -10 },
-  strengthTrack: { backgroundColor: "#DDE3F7", borderRadius: 3, height: 6, overflow: "hidden", width: "100%" },
+  strengthTrack: { backgroundColor: colors.borderMuted, borderRadius: 3, height: 6, overflow: "hidden", width: "100%" },
   strengthFill: { borderRadius: 3, height: 6 },
   strengthText: { fontSize: 12, fontWeight: "700" },
-  label: { color: "#263568", fontSize: 13, fontWeight: "800" },
+  label: { color: colors.textLabel, fontSize: 13, fontWeight: "800" },
   usernameInput: {
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderColor: "#CDD5F0",
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
     borderRadius: 12,
     borderWidth: 1,
     flexDirection: "row",
     minHeight: 56,
   },
-  usernamePrefix: { color: "#6657C8", fontSize: 20, fontWeight: "800", paddingLeft: 16 },
-  usernameTextInput: { color: "#182452", flex: 1, fontSize: 16, minHeight: 56, paddingHorizontal: 8, paddingRight: 16 },
+  usernamePrefix: { color: colors.accent, fontSize: 20, fontWeight: "800", paddingLeft: 16 },
+  usernameTextInput: { color: colors.textPrimary, flex: 1, fontSize: 16, minHeight: 56, paddingHorizontal: 8, paddingRight: 16 },
   input: {
-    backgroundColor: "#FFFFFF",
-    borderColor: "#CDD5F0",
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
     borderRadius: 12,
     borderWidth: 1,
-    color: "#182452",
+    color: colors.textPrimary,
     fontSize: 16,
     minHeight: 56,
     paddingHorizontal: 16,
   },
-  button: { alignItems: "center", backgroundColor: "#263B91", borderRadius: 14, justifyContent: "center", marginTop: 34, minHeight: 58 },
-  buttonText: { color: "#F2F4FF", fontSize: 16, fontWeight: "800" },
+  button: { alignItems: "center", backgroundColor: colors.primary, borderRadius: 14, justifyContent: "center", marginTop: 34, minHeight: 58 },
+  buttonText: { color: colors.background, fontSize: 16, fontWeight: "800" },
   pressed: { opacity: 0.75 },
-  error: { color: "#B4234D", fontSize: 13, lineHeight: 19, marginTop: 16, textAlign: "center" },
-  note: { color: "#7D88AD", fontSize: 12, lineHeight: 18, marginTop: 16, textAlign: "center" },
-});
+  error: { color: colors.danger, fontSize: 13, lineHeight: 19, marginTop: 16, textAlign: "center" },
+  note: { color: colors.textSubtle, fontSize: 12, lineHeight: 18, marginTop: 16, textAlign: "center" },
+  });
+}

@@ -41,6 +41,8 @@ example
 # generated firebase stuff
 firebase.json
 firestore.rules
+!firebase.json
+!firestore.rules
 
 # generated native folders
 /ios
